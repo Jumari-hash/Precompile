@@ -11,26 +11,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       # Setup QEMU for ARM emulation
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
 
-      # Setup Docker buildx for multi-arch builds
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      # Install ARM cross-build tools
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip python3-dev build-essential cmake git qemu-user-static binfmt-support
 
-      # Build ARM Docker image and wheel
+      # Clone llama-cpp-python (or use repo files)
+      - name: Clone llama-cpp-python
+        run: |
+          git clone https://github.com/abetlen/llama-cpp-python.git
+          cd llama-cpp-python
+
+      # Build wheel under ARM emulation
       - name: Build ARM wheel
         run: |
-          docker buildx build             --platform linux/arm64             --output type=local,dest=./dist-arm             .
+          cd llama-cpp-python
+          # Ensure pip is up to date
+          pip install --upgrade pip setuptools wheel
+          # Build wheel
+          pip wheel . -w dist-arm
 
-      # Upload the built wheel
+      # Upload ARM wheel artifact
       - name: Upload ARM wheel
         uses: actions/upload-artifact@v4
         with:
           name: llama-cpp-python-arm64
-          path: ./dist-arm/
+          path: ./llama-cpp-python/dist-arm/
