@@ -9,38 +9,38 @@ on:
 jobs:
   build-arm64:
     runs-on: ubuntu-latest
+
     steps:
+      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          submodules: recursive  # Ensure vendor/llama.cpp is cloned
 
-      # Setup QEMU for ARM emulation
+      # 2️⃣ Setup QEMU for ARM emulation
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
 
-      # Install ARM cross-build tools
+      # 3️⃣ Install build dependencies
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-pip python3-dev build-essential cmake git qemu-user-static binfmt-support
+          sudo apt-get install -y             python3 python3-pip python3-dev             build-essential cmake git qemu-user-static binfmt-support
+          pip install --upgrade pip setuptools wheel
 
-      # Clone llama-cpp-python (or use repo files)
-      - name: Clone llama-cpp-python
-        run: |
-          git clone https://github.com/abetlen/llama-cpp-python.git
-          cd llama-cpp-python
+      # 4️⃣ Initialize submodules (if not already)
+      - name: Update submodules
+        run: git submodule update --init --recursive
 
-      # Build wheel under ARM emulation
+      # 5️⃣ Build the ARM wheel
       - name: Build ARM wheel
         run: |
           cd llama-cpp-python
-          # Ensure pip is up to date
-          pip install --upgrade pip setuptools wheel
-          # Build wheel
           pip wheel . -w dist-arm
 
-      # Upload ARM wheel artifact
+      # 6️⃣ Upload the ARM wheel as artifact
       - name: Upload ARM wheel
         uses: actions/upload-artifact@v4
         with:
