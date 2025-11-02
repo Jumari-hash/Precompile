@@ -1,7 +1,14 @@
-FROM python:3.10-slim
+FROM ubuntu:22.04
 
-ENV CMAKE_ARGS=-DLLAMA_NATIVE=OFF
+# Install dependencies
+RUN apt-get update && apt-get install -y     python3 python3-pip python3-dev     build-essential cmake git
 
-RUN apt-get update && apt-get install -y     build-essential cmake git libopenblas-dev  && pip install --upgrade pip build  && git clone --branch v0.2.90 https://github.com/abetlen/llama-cpp-python.git  && cd llama-cpp-python  && python -m build --wheel --outdir /dist  && mv /dist /output  && rm -rf /var/lib/apt/lists/* /llama-cpp-python
+# Set working directory
+WORKDIR /app
 
-WORKDIR /output
+# Copy source
+COPY . .
+
+# Build the wheel
+RUN pip install --upgrade pip setuptools wheel
+RUN pip wheel . -w dist

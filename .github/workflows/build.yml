@@ -1,38 +1,36 @@
-name: Build llama-cpp-python 0.2.90 ARM64 Wheel
+name: Build llama-cpp-python ARM64
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-arm64:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🧰 Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: 🐳 Set up QEMU for ARM64 emulation
+      # Setup QEMU for ARM emulation
+      - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: linux/arm64
 
-      - name: ⚙️ Set up Docker Buildx
+      # Setup Docker buildx for multi-arch builds
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🧱 Build llama-cpp-python 0.2.90 for ARM64
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64
-          file: ./Dockerfile
-          outputs: type=local,dest=./dist
-          build-args: |
-            LLAMA_CPP_VERSION=0.2.90
+      # Build ARM Docker image and wheel
+      - name: Build ARM wheel
+        run: |
+          docker buildx build             --platform linux/arm64             --output type=local,dest=./dist-arm             .
 
-      - name: 📦 Upload ARM64 wheel artifact
-        uses: actions/upload-artifact@v4
+      # Upload the built wheel
+      - name: Upload ARM wheel
+        uses: actions/upload-artifact@v3
         with:
-          name: llama-cpp-python-0.2.90-arm64
-          path: dist/
+          name: llama-cpp-python-arm64
+          path: ./dist-arm/
