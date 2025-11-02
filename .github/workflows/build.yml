@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
 
-jobs:d
+jobs:
   build-arm64:
     runs-on: ubuntu-latest
 
